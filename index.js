@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const compression = require('compression');
 const Web3 = require('web3');
 
 let app = express();
@@ -15,6 +16,7 @@ let web3 = new Web3(provider);
 
 app.use(cors());
 app.use(bodyParser.json());
+// app.use(compression());
 app.set('x-powered-by', false);
 
 app.use((req, res) => {
@@ -25,9 +27,9 @@ app.use((req, res) => {
   res.setHeader('access-control-allow-origin', '*');
   res.setHeader('access-control-max-age', 86400);
   res.setHeader('vary', 'Origin');
-  res.setHeader('content-type', 'application/json');
+  res.setHeader('Content-Type', 'application/json');
 
-  res.json({ jsonrpc: '2.0', id, result: latestBlock });
+  res.end(JSON.stringify({ jsonrpc: '2.0', id, result: latestBlock }));
 });
 
 web3.eth.getBlockNumber((err, blockNumber) => {
