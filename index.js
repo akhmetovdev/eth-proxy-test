@@ -3,8 +3,24 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
+const cors = require('@fastify/cors');
+const compress = require('@fastify/compress');
 
 let latestBlock = undefined;
+
+let corsHeaders = [
+  'DNT',
+  'X-CustomHeader',
+  'Keep-Alive',
+  'User-Agent',
+  'X-Requested-With',
+  'If-Modified-Since',
+  'Cache-Control',
+  'Content-Type',
+  'Authorization'
+];
+
+let corsMethods = ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'];
 
 (async function () {
   const fastify = require('fastify')({
@@ -17,25 +33,14 @@ let latestBlock = undefined;
     }
   });
 
-  await fastify.register(require('@fastify/cors'), {
+  await fastify.register(cors, {
     credentials: true,
     maxAge: 1_728_000,
-    preflightContinue: true,
-    allowedHeaders: [
-      'DNT',
-      'X-CustomHeader',
-      'Keep-Alive',
-      'User-Agent',
-      'X-Requested-With',
-      'If-Modified-Since',
-      'Cache-Control',
-      'Content-Type',
-      'Authorization'
-    ],
-    methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']
+    allowedHeaders: corsHeaders,
+    methods: corsMethods
   });
 
-  await fastify.register(require('@fastify/compress'), {
+  await fastify.register(compress, {
     removeContentLengthHeader: false,
     encodings: ['gzip']
   });
@@ -50,6 +55,7 @@ let latestBlock = undefined;
     const { id } = request.body;
 
     reply.header('Strict-Transport-Security', 'max-age=15724800; includeSubDomains');
+    reply.header('Access-Control-Max-Age', String(1_728_000));
 
     reply.type('application/json').compress({ jsonrpc: '2.0', id, result: latestBlock });
   });
