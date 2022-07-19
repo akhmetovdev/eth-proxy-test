@@ -25,6 +25,7 @@ app.use((req, res) => {
   res.setHeader('access-control-allow-origin', '*');
   res.setHeader('access-control-max-age', 86400);
   res.setHeader('vary', 'Origin');
+  res.setHeader('content-type', 'application/json');
 
   res.json({ jsonrpc: '2.0', id, result: latestBlock });
 });
