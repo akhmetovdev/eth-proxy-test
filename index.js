@@ -16,7 +16,7 @@ let web3 = new Web3(provider);
 
 app.use(cors());
 app.use(bodyParser.json());
-// app.use(compression());
+app.use(compression());
 app.set('x-powered-by', false);
 
 app.use((req, res) => {
