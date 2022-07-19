@@ -1,0 +1,15 @@
+{
+  "apps": [
+    {
+      "name": "eth-proxy-test",
+      "script": "index.js",
+      "instances": 1,
+      "exec_mode": "fork",
+      "log_file": "/opt/logs/eth-proxy-test.out",
+      "log_date_format": "YYYY-MM-DD HH:mm Z",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}
