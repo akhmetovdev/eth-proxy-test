@@ -34,6 +34,8 @@ let latestBlock = undefined;
     reply.header('access-control-allow-origin', '*');
     reply.header('access-control-max-age', 86400);
     reply.header('vary', 'Origin');
+    reply.header('Access-Control-Max-Age', 1728000);
+    reply.header('Strict-Transport-Security', 'max-age=15724800; includeSubDomains');
     reply.type('application/json');
 
     reply.compress({ jsonrpc: '2.0', id, result: latestBlock });
