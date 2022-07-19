@@ -1,12 +1,22 @@
 require('dotenv').config();
 
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const compression = require('compression');
+const fs = require('fs');
+const path = require('path');
 const Web3 = require('web3');
 
-let app = express();
+const fastify = require('fastify')({
+  logger: true,
+  http2: true,
+  https: {
+    allowHTTP1: true,
+    key: fs.readFileSync(path.join(__dirname, 'fastify.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'fastify.cert'))
+  }
+});
+
+fastify.register(require('@fastify/cors'));
+fastify.register(require('@fastify/compress'));
+
 let latestBlock = undefined;
 let port = parseInt(process.env.PORT) || 8545;
 let web3WsUrl = process.env.WEB3_WS_URL;
@@ -14,51 +24,50 @@ let clientConfig = { maxReceivedFrameSize: 1e9, maxReceivedMessageSize: 1e9 };
 let provider = new Web3.providers.WebsocketProvider(web3WsUrl, { clientConfig });
 let web3 = new Web3(provider);
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(compression());
-app.set('x-powered-by', false);
+fastify.post('/', (request, reply) => {
+  const { id } = request.body;
 
-app.use((req, res) => {
-  const { id } = req.body;
+  reply.header('access-control-allow-headers', '*');
+  reply.header('access-control-allow-methods', '*');
+  reply.header('access-control-allow-origin', '*');
+  reply.header('access-control-max-age', 86400);
+  reply.header('vary', 'Origin');
 
-  res.setHeader('access-control-allow-headers', '*');
-  res.setHeader('access-control-allow-methods', '*');
-  res.setHeader('access-control-allow-origin', '*');
-  res.setHeader('access-control-max-age', 86400);
-  res.setHeader('vary', 'Origin');
-  res.setHeader('Content-Type', 'application/json');
-
-  res.end(JSON.stringify({ jsonrpc: '2.0', id, result: latestBlock }));
+  reply.send({ jsonrpc: '2.0', id, result: latestBlock });
 });
 
 web3.eth.getBlockNumber((err, blockNumber) => {
   if (err) {
-    console.error(err);
+    fastify.log.error(err);
     process.exit(1);
   }
 
   web3.eth.getBlock(blockNumber, false, (err, block) => {
     if (err) {
-      console.error(err);
+      fastify.log.error(err);
       process.exit(1);
     }
 
     saveBlock(block);
-    console.log(`block = ${blockNumber}`);
+    fastify.log.info(`block = ${blockNumber}`);
 
     web3.eth.subscribe('newBlockHeaders', (err, blockHeader) => {
       if (err == null) {
         web3.eth.getBlock(blockHeader.number, false, (err, block) => {
           if (err == null) {
             saveBlock(block);
-            console.log(`block = ${blockHeader.number}`);
+            fastify.log.info(`block = ${blockHeader.number}`);
           }
         });
       }
     });
 
-    app.listen(port, '0.0.0.0', () => console.log(`listening on port = ${port}`));
+    fastify.listen({ port, host: '0.0.0.0' }, err => {
+      if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+      }
+    });
   });
 });
 
