@@ -39,7 +39,7 @@ web3.eth.getBlockNumber((err, blockNumber) => {
 
     web3.eth.subscribe('newBlockHeaders', (err, blockHeader) => {
       if (err == null) {
-        web3.eth.getBlock(blockNumber, false, (err, block) => {
+        web3.eth.getBlock(blockHeader.number, false, (err, block) => {
           if (err == null) {
             saveBlock(block);
             console.log(`block = ${blockHeader.number}`);
