@@ -17,8 +17,28 @@ let latestBlock = undefined;
     }
   });
 
-  await fastify.register(require('@fastify/cors'));
-  await fastify.register(require('@fastify/compress'), { removeContentLengthHeader: false, encodings: ['gzip'] });
+  await fastify.register(require('@fastify/cors'), {
+    credentials: true,
+    maxAge: 1_728_000,
+    preflightContinue: true,
+    allowedHeaders: [
+      'DNT',
+      'X-CustomHeader',
+      'Keep-Alive',
+      'User-Agent',
+      'X-Requested-With',
+      'If-Modified-Since',
+      'Cache-Control',
+      'Content-Type',
+      'Authorization'
+    ],
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']
+  });
+
+  await fastify.register(require('@fastify/compress'), {
+    removeContentLengthHeader: false,
+    encodings: ['gzip']
+  });
 
   let port = parseInt(process.env.PORT) || 8545;
   let web3WsUrl = process.env.WEB3_WS_URL;
@@ -29,16 +49,9 @@ let latestBlock = undefined;
   fastify.post('/', (request, reply) => {
     const { id } = request.body;
 
-    reply.header('access-control-allow-headers', '*');
-    reply.header('access-control-allow-methods', '*');
-    reply.header('access-control-allow-origin', '*');
-    reply.header('access-control-max-age', 86400);
-    reply.header('vary', 'Origin');
-    reply.header('Access-Control-Max-Age', 1728000);
     reply.header('Strict-Transport-Security', 'max-age=15724800; includeSubDomains');
-    reply.type('application/json');
 
-    reply.compress({ jsonrpc: '2.0', id, result: latestBlock });
+    reply.type('application/json').compress({ jsonrpc: '2.0', id, result: latestBlock });
   });
 
   web3.eth.getBlockNumber((err, blockNumber) => {
