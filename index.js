@@ -15,9 +15,16 @@ let web3 = new Web3(provider);
 
 app.use(cors());
 app.use(bodyParser.json());
+app.set('x-powered-by', false);
 
 app.use((req, res) => {
   const { id } = req.body;
+
+  res.setHeader('access-control-allow-headers', '*');
+  res.setHeader('access-control-allow-methods', '*');
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-max-age', 86400);
+  res.setHeader('vary', 'Origin');
 
   res.json({ jsonrpc: '2.0', id, result: latestBlock });
 });
